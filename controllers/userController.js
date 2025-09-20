@@ -180,34 +180,14 @@ const getUsers = async (req, res) => {
 // @access  Private
 const updateUser = async (req, res) => {
   try {
-    const { id } = req.params;
-    
-    // Validar que el ID esté presente y sea válido
-    if (!id || id === 'undefined' || id === 'null') {
-      return res.status(400).json({
-        success: false,
-        message: 'ID de usuario requerido. El frontend debe enviar el ID del usuario autenticado.',
-        debug: {
-          receivedId: id,
-          authenticatedUserId: req.user ? req.user._id : 'No user in token',
-          suggestion: 'Usar req.user._id del token JWT en lugar del parámetro de URL'
-        }
-      });
-    }
-
-    // Validar formato de ObjectId
-    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({
-        success: false,
-        message: 'ID de usuario inválido. Debe ser un ObjectId válido de 24 caracteres.',
-        debug: {
-          receivedId: id,
-          expectedFormat: '24 character hex string'
-        }
-      });
-    }
-
+    // Usar el ID del usuario autenticado del token JWT
+    const id = req.user._id;
     const updates = req.body;
+
+    console.log('=== UPDATE USER REQUEST ===');
+    console.log('User ID from token:', id);
+    console.log('Updates received:', updates);
+    console.log('Request headers:', req.headers);
 
     // No permitir actualizar contraseña desde esta ruta
     if (updates.password) {
@@ -291,13 +271,33 @@ const updateUser = async (req, res) => {
       }
     );
 
-    res.status(200).json({
+    console.log('=== UPDATE USER SUCCESS ===');
+    console.log('Updated user:', updatedUser);
+
+    // Crear respuesta sin password
+    const userResponse = {
+      _id: updatedUser._id,
+      nombre: updatedUser.nombre,
+      email: updatedUser.email,
+      telefono: updatedUser.telefono,
+      rol: updatedUser.rol,
+      skills: updatedUser.skills,
+      ubicacion: updatedUser.ubicacion,
+      fechaRegistro: updatedUser.fechaRegistro
+    };
+
+    const response = {
       success: true,
       message: 'Usuario actualizado exitosamente',
       data: {
-        user: updatedUser.toJSON()
+        user: userResponse
       }
-    });
+    };
+
+    console.log('=== SENDING RESPONSE ===');
+    console.log('Response:', response);
+
+    res.status(200).json(response);
 
   } catch (error) {
     console.error('Error en updateUser:', error);
@@ -367,23 +367,8 @@ const getUserById = async (req, res) => {
 // @access  Private
 const changePassword = async (req, res) => {
   try {
-    const { id } = req.params;
-    
-    // Validar que el ID esté presente y sea válido
-    if (!id || id === 'undefined' || id === 'null') {
-      return res.status(400).json({
-        success: false,
-        message: 'ID de usuario requerido'
-      });
-    }
-
-    // Validar formato de ObjectId
-    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
-      return res.status(400).json({
-        success: false,
-        message: 'ID de usuario inválido'
-      });
-    }
+    // Usar el ID del usuario autenticado del token JWT
+    const id = req.user._id;
 
     const { currentPassword, newPassword } = req.body;
 
@@ -531,11 +516,26 @@ const updateMyProfile = async (req, res) => {
       }
     );
 
+    console.log('=== UPDATE MY PROFILE SUCCESS ===');
+    console.log('Updated user:', updatedUser);
+
+    // Crear respuesta sin password
+    const userResponse = {
+      _id: updatedUser._id,
+      nombre: updatedUser.nombre,
+      email: updatedUser.email,
+      telefono: updatedUser.telefono,
+      rol: updatedUser.rol,
+      skills: updatedUser.skills,
+      ubicacion: updatedUser.ubicacion,
+      fechaRegistro: updatedUser.fechaRegistro
+    };
+
     res.status(200).json({
       success: true,
       message: 'Perfil actualizado exitosamente',
       data: {
-        user: updatedUser.toJSON()
+        user: userResponse
       }
     });
 
