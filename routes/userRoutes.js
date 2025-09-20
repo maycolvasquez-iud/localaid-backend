@@ -355,7 +355,7 @@ router.get('/:id', getUserById);
  *       500:
  *         description: Error interno del servidor
  */
-router.put('/:id', authenticateToken, updateUser);
+router.put('/me', authenticateToken, updateUser);
 
 /**
  * @swagger
@@ -408,7 +408,7 @@ router.put('/:id', authenticateToken, updateUser);
  *       500:
  *         description: Error interno del servidor
  */
-router.put('/:id/password', authenticateToken, changePassword);
+router.put('/me/password', authenticateToken, changePassword);
 
 module.exports = router;
 
