@@ -186,7 +186,12 @@ const updateUser = async (req, res) => {
     if (!id || id === 'undefined' || id === 'null') {
       return res.status(400).json({
         success: false,
-        message: 'ID de usuario requerido'
+        message: 'ID de usuario requerido. El frontend debe enviar el ID del usuario autenticado.',
+        debug: {
+          receivedId: id,
+          authenticatedUserId: req.user ? req.user._id : 'No user in token',
+          suggestion: 'Usar req.user._id del token JWT en lugar del parámetro de URL'
+        }
       });
     }
 
@@ -194,7 +199,11 @@ const updateUser = async (req, res) => {
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({
         success: false,
-        message: 'ID de usuario inválido'
+        message: 'ID de usuario inválido. Debe ser un ObjectId válido de 24 caracteres.',
+        debug: {
+          receivedId: id,
+          expectedFormat: '24 character hex string'
+        }
       });
     }
 
@@ -442,10 +451,128 @@ const changePassword = async (req, res) => {
   }
 };
 
+// @desc    Actualizar información del usuario autenticado
+// @route   PUT /api/users/profile
+// @access  Private
+const updateMyProfile = async (req, res) => {
+  try {
+    const updates = req.body;
+
+    // No permitir actualizar contraseña desde esta ruta
+    if (updates.password) {
+      delete updates.password;
+    }
+
+    // Limpiar y validar datos de entrada
+    if (updates.nombre !== undefined) {
+      updates.nombre = updates.nombre ? updates.nombre.trim() : '';
+      if (!updates.nombre) {
+        return res.status(400).json({
+          success: false,
+          message: 'El nombre no puede estar vacío',
+          field: 'nombre'
+        });
+      }
+    }
+
+    if (updates.telefono !== undefined && updates.telefono) {
+      updates.telefono = updates.telefono.trim();
+      if (updates.telefono === '') {
+        updates.telefono = undefined; // Eliminar si está vacío
+      }
+    }
+
+    if (updates.skills !== undefined) {
+      if (Array.isArray(updates.skills)) {
+        updates.skills = updates.skills
+          .map(skill => skill ? skill.trim() : '')
+          .filter(skill => skill !== ''); // Eliminar skills vacías
+      }
+    }
+
+    // Validar y procesar ubicación si se proporciona
+    if (updates.ubicacion) {
+      // Si se envía ubicación vacía o nula, eliminar la ubicación
+      if (!updates.ubicacion.coordinates || 
+          updates.ubicacion.coordinates.length === 0 ||
+          (updates.ubicacion.coordinates[0] === null && updates.ubicacion.coordinates[1] === null)) {
+        updates.ubicacion = undefined;
+      } else if (updates.ubicacion.coordinates && updates.ubicacion.coordinates.length === 2) {
+        // Validar coordenadas válidas
+        const [longitud, latitud] = updates.ubicacion.coordinates;
+        if (isNaN(longitud) || isNaN(latitud) || 
+            longitud < -180 || longitud > 180 || 
+            latitud < -90 || latitud > 90) {
+          return res.status(400).json({
+            success: false,
+            message: 'Las coordenadas deben ser [longitud, latitud] válidas'
+          });
+        }
+        // Formatear ubicación correctamente
+        updates.ubicacion = {
+          type: 'Point',
+          coordinates: [parseFloat(longitud), parseFloat(latitud)]
+        };
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: 'Las coordenadas deben ser [longitud, latitud]'
+        });
+      }
+    }
+
+    // Actualizar usuario usando el ID del token JWT
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      updates,
+      { 
+        new: true, 
+        runValidators: true 
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Perfil actualizado exitosamente',
+      data: {
+        user: updatedUser.toJSON()
+      }
+    });
+
+  } catch (error) {
+    console.error('Error en updateMyProfile:', error);
+    
+    // Manejar errores de validación de Mongoose
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Datos de usuario inválidos',
+        errors
+      });
+    }
+
+    // Manejar error de email duplicado
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'El email ya está registrado'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
 module.exports = {
   createUser,
   getUsers,
   updateUser,
+  updateMyProfile,
   getUserById,
   changePassword
 };

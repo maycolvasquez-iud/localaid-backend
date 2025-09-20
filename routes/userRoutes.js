@@ -3,6 +3,7 @@ const {
   createUser,
   getUsers,
   updateUser,
+  updateMyProfile,
   getUserById,
   changePassword
 } = require('../controllers/userController');
@@ -203,6 +204,62 @@ router.post('/', createUser);
  *         description: Error interno del servidor
  */
 router.get('/', getUsers);
+
+/**
+ * @swagger
+ * /api/users/profile:
+ *   put:
+ *     summary: Actualizar mi perfil (usuario autenticado)
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *               telefono:
+ *                 type: string
+ *               skills:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               ubicacion:
+ *                 type: object
+ *                 properties:
+ *                   coordinates:
+ *                     type: array
+ *                     items:
+ *                       type: number
+ *     responses:
+ *       200:
+ *         description: Perfil actualizado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Datos inválidos
+ *       401:
+ *         description: Token de autenticación requerido
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.put('/profile', authenticateToken, updateMyProfile);
 
 /**
  * @swagger
