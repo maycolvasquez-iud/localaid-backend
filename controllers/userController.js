@@ -181,6 +181,23 @@ const getUsers = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Validar que el ID esté presente y sea válido
+    if (!id || id === 'undefined' || id === 'null') {
+      return res.status(400).json({
+        success: false,
+        message: 'ID de usuario requerido'
+      });
+    }
+
+    // Validar formato de ObjectId
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'ID de usuario inválido'
+      });
+    }
+
     const updates = req.body;
 
     // No permitir actualizar contraseña desde esta ruta
@@ -342,6 +359,23 @@ const getUserById = async (req, res) => {
 const changePassword = async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Validar que el ID esté presente y sea válido
+    if (!id || id === 'undefined' || id === 'null') {
+      return res.status(400).json({
+        success: false,
+        message: 'ID de usuario requerido'
+      });
+    }
+
+    // Validar formato de ObjectId
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'ID de usuario inválido'
+      });
+    }
+
     const { currentPassword, newPassword } = req.body;
 
     // Validar datos requeridos
