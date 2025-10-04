@@ -16,13 +16,67 @@ const app = express();
 // Middleware
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://localaid.com', 'https://www.localaid.com']
-    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'],
-  credentials: true
+    ? [
+        'https://localaid.com', 
+        'https://www.localaid.com',
+        'https://localaid-frontend.onrender.com',
+        'https://localaid-app.onrender.com'
+      ]
+    : [
+        'http://localhost:3000', 
+        'http://localhost:3001', 
+        'http://localhost:5173',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:3001'
+      ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+/**
+ * @swagger
+ * /api/health:
+ *   get:
+ *     summary: Health check del servidor
+ *     description: Verifica que la API esté funcionando correctamente
+ *     tags: [Sistema]
+ *     responses:
+ *       200:
+ *         description: Servidor funcionando correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "LOCALAID API está funcionando correctamente"
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                 environment:
+ *                   type: string
+ *                   example: "production"
+ *                 version:
+ *                   type: string
+ *                   example: "1.0.0"
+ */
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'LOCALAID API está funcionando correctamente',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    version: '1.0.0'
+  });
+});
 
 // Configurar Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
