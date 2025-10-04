@@ -22,8 +22,12 @@ const options = {
         description: 'Servidor de desarrollo'
       },
       {
+        url: 'https://localaid-backend.onrender.com',
+        description: 'Servidor de producción (Render)'
+      },
+      {
         url: 'https://api.localaid.com',
-        description: 'Servidor de producción'
+        description: 'Servidor de producción (dominio personalizado)'
       }
     ],
     components: {
