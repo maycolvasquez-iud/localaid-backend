@@ -17,7 +17,8 @@ const app = express();
 app.use(cors({
   origin: [
     'https://localaid-r585.onrender.com',
-    'http://localhost:3001'
+    'http://localhost:3001',
+    'https://localaid2.netlify.app'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true
