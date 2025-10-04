@@ -101,3 +101,14 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# Render deployment
+.render/
+
+# Production logs
+pm2.log
+pm2-error.log
+
+# Backup files
+*.backup
+*.bak
